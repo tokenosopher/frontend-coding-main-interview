@@ -1,7 +1,6 @@
 import { GetServerSideProps, NextPage } from "next";
 import {Box, Button, Grid, ImageList, ImageListItem, Modal, Typography} from "@mui/material";
 import { useState } from "react";
-import { style } from "@mui/system";
 
 const modalStyle = {
   position: "absolute" as "absolute",
@@ -53,8 +52,7 @@ const Vault: NextPage<PageProps> = ({ firstHundredImages }) => {
             {firstHundredImages.map((image) => (
               <ImageListItem key={image.id} onClick={() => handleOpen(image)}>
                 <img
-                  src={`${image.thumbnailUrl}?w=1000&h=1000&fit=crop&auto=format`}
-                  srcSet={`${image.thumbnailUrl}?w=500&h=500&fit=crop&auto=format&dpr=2 2x`}
+                  src={image.thumbnailUrl}
                   alt={image.title}
                   loading="lazy"
                 />
@@ -78,10 +76,6 @@ const Vault: NextPage<PageProps> = ({ firstHundredImages }) => {
   );
 };
 
-
-
-export default Vault;
-
 export const getServerSideProps: GetServerSideProps = async () => {
   const imagesResponse = await fetch(IMAGES_API_LINK);
   const images = await imagesResponse.json();
@@ -94,3 +88,6 @@ export const getServerSideProps: GetServerSideProps = async () => {
     },
   };
 };
+
+
+export default Vault;
