@@ -1,26 +1,19 @@
-import type { NextPage } from "next";
-import { styled } from "@mui/material/styles";
+import type {NextPage} from "next";
+import {GetServerSideProps} from "next";
+import {styled} from "@mui/material/styles";
 import Card from "@mui/material/Card";
 import CardHeader from "@mui/material/CardHeader";
-import CardMedia from "@mui/material/CardMedia";
 import CardContent from "@mui/material/CardContent";
 import CardActions from "@mui/material/CardActions";
 import Collapse from "@mui/material/Collapse";
-import Avatar from "@mui/material/Avatar";
-import IconButton, { IconButtonProps } from "@mui/material/IconButton";
+import IconButton, {IconButtonProps} from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
-import { red } from "@mui/material/colors";
-import { GetStaticProps, GetStaticPaths, GetServerSideProps } from "next";
 
-import {
-  Favorite,
-  Share,
-  ExpandMore as ExpandMoreIcon,
-  MoreVert,
-} from "@mui/icons-material";
+import {Comment as CommentIcon,} from "@mui/icons-material";
 
-import { useEffect, useState } from "react";
-import { Box, Container } from "@mui/material";
+import {useState} from "react";
+import {Badge, Container} from "@mui/material";
+
 const COMMENTS_API_LINK = "https://jsonplaceholder.typicode.com/comments";
 const POSTS_API_LINK = "https://jsonplaceholder.typicode.com/posts";
 
@@ -51,22 +44,31 @@ interface ExpandMoreProps extends IconButtonProps {
 const ExpandMore = styled((props: ExpandMoreProps) => {
   const { expand, ...other } = props;
   return <IconButton {...other} />;
-})(({ theme, expand }) => ({
-  transform: !expand ? "rotate(0deg)" : "rotate(180deg)",
+})(() => ({
   marginLeft: "auto",
-  transition: theme.transitions.create("transform", {
-    duration: theme.transitions.duration.shortest,
-  }),
 }));
 
 const Feed: NextPage<PageProps> = ({ posts, comments }) => {
-  const [expanded, setExpanded] = useState(false);
 
-  const handleExpandClick = () => {
-    setExpanded(!expanded);
+    const [expandedPosts, setExpandedPosts] = useState(
+        Object.fromEntries(posts.map((post) => [post.id, false]))
+    );
+
+    //create an object with postId as key and amount of comments as value
+    const commentsPerPost = Object.fromEntries(
+        posts.map((post) => [
+          post.id,
+          comments.filter((comment) => comment.postId === post.id).length,
+        ])
+    );
+
+
+  const handleExpandClick = (postId) => {
+    setExpandedPosts((prevState) => ({
+      ...prevState,
+      [postId]: !prevState[postId],
+    }));
   };
-
-  useEffect(() => {}, []);
 
   return (
     <Container>
@@ -79,22 +81,18 @@ const Feed: NextPage<PageProps> = ({ posts, comments }) => {
             </Typography>
           </CardContent>
           <CardActions disableSpacing>
-            <IconButton aria-label="add to favorites">
-              <Favorite />
-            </IconButton>
-            <IconButton aria-label="share">
-              <Share />
-            </IconButton>
             <ExpandMore
-              expand={expanded}
-              onClick={handleExpandClick}
-              aria-expanded={expanded}
+              expand={expandedPosts[post.id]}
+              onClick={() => handleExpandClick(post.id)}
+              aria-expanded={expandedPosts[post.id]}
               aria-label="show more"
             >
-              <ExpandMoreIcon />
+                <Badge badgeContent={commentsPerPost[post.id]} color="primary">
+              <CommentIcon />
+                </Badge>
             </ExpandMore>
           </CardActions>
-          <Collapse in={expanded} timeout="auto" unmountOnExit>
+          <Collapse in={expandedPosts[post.id]} timeout="auto" unmountOnExit>
             <CardContent>
               <Comments postId={post.id} comments={comments} />
             </CardContent>
@@ -113,10 +111,14 @@ const Comments = ({
   comments: Comment[];
 }) => {
   const postComments = comments.filter((comment) => comment.postId === postId);
+
   return (
     <>
+      <Typography variant="h6" gutterBottom component="div">
+        Comments
+        </Typography>
       {postComments.map((comment) => (
-        <Typography variant="body2" color="text.secondary" key={comment.id}>
+        <Typography variant="body2" color="text.secondary" key={comment.id} mb={2}>
           {comment.body}
         </Typography>
       ))}
